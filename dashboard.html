@@ -1,0 +1,1810 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance Signal Bot Dashboard V4</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #fff; 
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        .header { 
+            background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+            padding: 25px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .header h1 { font-size: 28px; margin-bottom: 10px; color: #4CAF50; }
+        .header p { margin: 5px 0; color: #ccc; }
+        
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 25px; 
+        }
+        .stat-card { 
+            background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-number { font-size: 32px; font-weight: bold; color: #4CAF50; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; color: #ccc; }
+        .signal { color: #ff4444 !important; }
+        .cooldown { color: #ffaa00 !important; }
+        
+        .tabs { 
+            display: flex; 
+            margin-bottom: 25px; 
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 5px;
+        }
+        .tab { 
+            flex: 1;
+            background: transparent; 
+            padding: 15px 25px; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .tab:hover { background: #3d3d3d; }
+        .tab.active { background: #4CAF50; color: white; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .table-container { 
+            background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .table-scroll { overflow-x: auto; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 1200px; 
+        }
+        th { 
+            background: #1a1a1a;
+            padding: 15px 12px; 
+            text-align: left; 
+            font-weight: 600; 
+            font-size: 13px; 
+            border-bottom: 2px solid #4CAF50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td { 
+            padding: 12px; 
+            border-bottom: 1px solid #404040; 
+            font-size: 13px;
+            vertical-align: middle;
+        }
+        tr:hover { background: rgba(76, 175, 80, 0.1); }
+        
+        .status-signal { background: #ff4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .status-cooldown { background: #ffaa00; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .status-no-signal { background: #666; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .status-error { background: #aa0000; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .status-skip { background: #444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        
+        .signal-long { background: #4CAF50; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .signal-short { background: #f44336; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        
+        .wt-positive { color: #ff6b6b; font-weight: bold; }
+        .wt-negative { color: #4ecdc4; font-weight: bold; }
+        .rsi-high { color: #ff6b6b; font-weight: bold; }
+        .rsi-low { color: #4ecdc4; font-weight: bold; }
+        .symbol-name { font-weight: bold; font-size: 14px; color: #4CAF50; }
+        
+        .signal-entry { 
+            background: linear-gradient(135deg, #2a4a2a 0%, #1e3a1e 100%);
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 12px; 
+            border-left: 4px solid #4CAF50;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .signal-short-entry { 
+            background: linear-gradient(135deg, #4a2a2a 0%, #3a1e1e 100%);
+            border-left-color: #f44336;
+        }
+        
+        .signal-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        .signal-symbol { font-size: 20px; font-weight: bold; color: #4CAF50; }
+        .signal-direction { 
+            padding: 8px 20px; 
+            border-radius: 25px; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 14px;
+        }
+        .signal-long-dir { background: #4CAF50; }
+        .signal-short-dir { background: #f44336; }
+        
+        .signal-details { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; 
+        }
+        .signal-group { 
+            background: rgba(255,255,255,0.05);
+            padding: 15px; 
+            border-radius: 8px; 
+        }
+        .signal-group h4 { 
+            margin: 0 0 12px 0; 
+            color: #4CAF50; 
+            font-size: 15px; 
+            border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+            padding-bottom: 5px;
+        }
+        .signal-item { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 8px 0; 
+            font-size: 13px; 
+        }
+        .signal-value { font-weight: bold; color: #fff; }
+        
+        .refresh-note { 
+            text-align: center; 
+            margin-top: 30px; 
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            color: #ccc; 
+        }
+        
+        .no-signals { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #888; 
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .signal-details { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Binance Signal Bot Dashboard V4</h1>
+            <p><strong>Cap nhat cuoi:</strong> 2025-06-06 15:06:45</p>
+            <p><strong>Cau hinh:</strong> 5m/1m | 
+            <p><strong>Cau hinh:</strong> 5m/1m | 
+               WT: -40.0/40.0 | 
+               RSI: 40.0/60.0</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">100</div>
+                <div class="stat-label">Tong quet</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number signal">0</div>
+                <div class="stat-label">Tin hieu</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number cooldown">0</div>
+                <div class="stat-label">Cooldown</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">100</div>
+                <div class="stat-label">Khong tin hieu</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Active Signals</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('overview')">📊 Market Overview</div>
+            <div class="tab" onclick="showTab('signals')">🎯 Active Signals (0)</div>
+        </div>
+        
+        <div id="overview" class="tab-content active">
+            <div class="table-container">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Symbol</th>
+                                <th>Signal</th>
+                                <th>Status</th>
+                                <th>H1</th>
+                                <th>H4</th>
+                                <th>1D</th>
+                                <th>WT1</th>
+                                <th>WT2</th>
+                                <th>RSI</th>
+                                <th>Volume 24h</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                <tr>
+                    <td>1</td>
+                    <td class="symbol-name">BTCUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>23.9</span></td>
+                    <td><span class='wt-positive'>26.4</span></td>
+                    <td><span class='rsi-high'>51.1</span></td>
+                    <td>$3054.0M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>2</td>
+                    <td class="symbol-name">ETHUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-20.8</span></td>
+                    <td><span class='wt-negative'>-17.2</span></td>
+                    <td><span class='rsi-low'>39.1</span></td>
+                    <td>$1910.7M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>3</td>
+                    <td class="symbol-name">BCHUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>1.1</span></td>
+                    <td><span class='wt-negative'>-3.2</span></td>
+                    <td><span class='rsi-low'>48.2</span></td>
+                    <td>$13.6M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>4</td>
+                    <td class="symbol-name">XRPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-4.1</span></td>
+                    <td><span class='wt-negative'>-19.3</span></td>
+                    <td><span class='rsi-high'>61.5</span></td>
+                    <td>$118.4M</td>
+                    <td>WT neutral, RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>5</td>
+                    <td class="symbol-name">LTCUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-38.6</span></td>
+                    <td><span class='wt-negative'>-43.9</span></td>
+                    <td><span class='rsi-low'>39.6</span></td>
+                    <td>$21.8M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>6</td>
+                    <td class="symbol-name">TRXUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>3.0</span></td>
+                    <td><span class='wt-positive'>4.4</span></td>
+                    <td><span class='rsi-low'>48.3</span></td>
+                    <td>$14.3M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>7</td>
+                    <td class="symbol-name">ETCUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-21.6</span></td>
+                    <td><span class='wt-negative'>-21.6</span></td>
+                    <td><span class='rsi-low'>38.2</span></td>
+                    <td>$6.6M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>8</td>
+                    <td class="symbol-name">LINKUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-28.4</span></td>
+                    <td><span class='wt-negative'>-27.7</span></td>
+                    <td><span class='rsi-low'>34.5</span></td>
+                    <td>$23.1M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>9</td>
+                    <td class="symbol-name">XLMUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-19.2</span></td>
+                    <td><span class='wt-negative'>-22.4</span></td>
+                    <td><span class='rsi-high'>52.1</span></td>
+                    <td>$7.3M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>10</td>
+                    <td class="symbol-name">ADAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-4.5</span></td>
+                    <td><span class='wt-negative'>-7.0</span></td>
+                    <td><span class='rsi-high'>57.8</span></td>
+                    <td>$44.9M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>11</td>
+                    <td class="symbol-name">XMRUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-48.7</span></td>
+                    <td><span class='wt-negative'>-42.7</span></td>
+                    <td><span class='rsi-low'>17.1</span></td>
+                    <td>$3.3M</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>12</td>
+                    <td class="symbol-name">ZECUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>9.6</span></td>
+                    <td><span class='wt-positive'>17.5</span></td>
+                    <td><span class='rsi-high'>53.4</span></td>
+                    <td>$934K</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>13</td>
+                    <td class="symbol-name">XTZUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-47.6</span></td>
+                    <td><span class='wt-negative'>-46.2</span></td>
+                    <td><span class='rsi-low'>36.4</span></td>
+                    <td>$844K</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>14</td>
+                    <td class="symbol-name">BNBUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>39.2</span></td>
+                    <td><span class='wt-positive'>43.7</span></td>
+                    <td><span class='rsi-high'>54.6</span></td>
+                    <td>$56.4M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>15</td>
+                    <td class="symbol-name">ATOMUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-62.6</span></td>
+                    <td><span class='wt-negative'>-62.2</span></td>
+                    <td><span class='rsi-low'>24.5</span></td>
+                    <td>$3.4M</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>16</td>
+                    <td class="symbol-name">IOTAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-49.9</span></td>
+                    <td><span class='wt-negative'>-48.5</span></td>
+                    <td><span class='rsi-low'>34.6</span></td>
+                    <td>$1.2M</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>17</td>
+                    <td class="symbol-name">VETUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>4.9</span></td>
+                    <td><span class='wt-positive'>9.6</span></td>
+                    <td><span class='rsi-low'>48.1</span></td>
+                    <td>$1.9M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>18</td>
+                    <td class="symbol-name">NEOUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-51.6</span></td>
+                    <td><span class='wt-negative'>-59.1</span></td>
+                    <td><span class='rsi-low'>35.6</span></td>
+                    <td>$2.3M</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>19</td>
+                    <td class="symbol-name">THETAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>16.8</span></td>
+                    <td><span class='wt-positive'>7.9</span></td>
+                    <td><span class='rsi-high'>52.4</span></td>
+                    <td>$1.9M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>20</td>
+                    <td class="symbol-name">ALGOUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-16.6</span></td>
+                    <td><span class='wt-negative'>-24.0</span></td>
+                    <td><span class='rsi-low'>50.0</span></td>
+                    <td>$2.4M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>21</td>
+                    <td class="symbol-name">COMPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>40.3</span></td>
+                    <td><span class='wt-positive'>37.7</span></td>
+                    <td><span class='rsi-high'>54.4</span></td>
+                    <td>$85.9M</td>
+                    <td>RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>22</td>
+                    <td class="symbol-name">DOGEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-45.3</span></td>
+                    <td><span class='wt-negative'>-42.5</span></td>
+                    <td><span class='rsi-low'>35.8</span></td>
+                    <td>$181.2M</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>23</td>
+                    <td class="symbol-name">KAVAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-41.6</span></td>
+                    <td><span class='wt-negative'>-36.8</span></td>
+                    <td><span class='rsi-low'>26.0</span></td>
+                    <td>$922K</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>24</td>
+                    <td class="symbol-name">DOTUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-48.4</span></td>
+                    <td><span class='wt-negative'>-43.0</span></td>
+                    <td><span class='rsi-low'>28.8</span></td>
+                    <td>$10.3M</td>
+                    <td>RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>25</td>
+                    <td class="symbol-name">CRVUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-22.3</span></td>
+                    <td><span class='wt-negative'>-16.1</span></td>
+                    <td><span class='rsi-low'>33.3</span></td>
+                    <td>$15.3M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>26</td>
+                    <td class="symbol-name">RUNEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-6.7</span></td>
+                    <td><span class='wt-negative'>-4.4</span></td>
+                    <td><span class='rsi-low'>48.8</span></td>
+                    <td>$3.6M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>27</td>
+                    <td class="symbol-name">EGLDUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>65.4</span></td>
+                    <td><span class='wt-positive'>62.6</span></td>
+                    <td><span class='rsi-high'>66.4</span></td>
+                    <td>$842K</td>
+                    <td>RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>28</td>
+                    <td class="symbol-name">SOLUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-6.5</span></td>
+                    <td><span class='wt-negative'>-8.5</span></td>
+                    <td><span class='rsi-high'>50.2</span></td>
+                    <td>$380.5M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>29</td>
+                    <td class="symbol-name">UNIUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-35.9</span></td>
+                    <td><span class='wt-negative'>-40.0</span></td>
+                    <td><span class='rsi-low'>45.0</span></td>
+                    <td>$19.4M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>30</td>
+                    <td class="symbol-name">AVAXUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-16.4</span></td>
+                    <td><span class='wt-negative'>-23.6</span></td>
+                    <td><span class='rsi-low'>44.0</span></td>
+                    <td>$26.5M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>31</td>
+                    <td class="symbol-name">NEARUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-44.9</span></td>
+                    <td><span class='wt-negative'>-44.7</span></td>
+                    <td><span class='rsi-low'>41.8</span></td>
+                    <td>$17.0M</td>
+                    <td>RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>32</td>
+                    <td class="symbol-name">AAVEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>1.7</span></td>
+                    <td><span class='wt-negative'>-3.7</span></td>
+                    <td><span class='rsi-low'>47.7</span></td>
+                    <td>$34.7M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>33</td>
+                    <td class="symbol-name">FILUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-25.2</span></td>
+                    <td><span class='wt-negative'>-20.7</span></td>
+                    <td><span class='rsi-low'>31.0</span></td>
+                    <td>$14.9M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>34</td>
+                    <td class="symbol-name">RSRUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>36.6</span></td>
+                    <td><span class='wt-positive'>27.5</span></td>
+                    <td><span class='rsi-high'>59.0</span></td>
+                    <td>$801K</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>35</td>
+                    <td class="symbol-name">AXSUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-16.4</span></td>
+                    <td><span class='wt-negative'>-9.8</span></td>
+                    <td><span class='rsi-low'>43.9</span></td>
+                    <td>$1.4M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>36</td>
+                    <td class="symbol-name">GRTUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-22.8</span></td>
+                    <td><span class='wt-negative'>-17.2</span></td>
+                    <td><span class='rsi-low'>34.3</span></td>
+                    <td>$1.6M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>37</td>
+                    <td class="symbol-name">SANDUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-5.1</span></td>
+                    <td><span class='wt-negative'>-12.0</span></td>
+                    <td><span class='rsi-low'>48.1</span></td>
+                    <td>$3.3M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>38</td>
+                    <td class="symbol-name">MANAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>43.6</span></td>
+                    <td><span class='wt-positive'>40.0</span></td>
+                    <td><span class='rsi-high'>51.9</span></td>
+                    <td>$2.1M</td>
+                    <td>RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>39</td>
+                    <td class="symbol-name">HBARUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-18.5</span></td>
+                    <td><span class='wt-negative'>-18.2</span></td>
+                    <td><span class='rsi-high'>52.2</span></td>
+                    <td>$9.5M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>40</td>
+                    <td class="symbol-name">DYDXUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-34.2</span></td>
+                    <td><span class='wt-negative'>-30.2</span></td>
+                    <td><span class='rsi-low'>33.3</span></td>
+                    <td>$3.1M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>41</td>
+                    <td class="symbol-name">GALAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-17.2</span></td>
+                    <td><span class='wt-negative'>-14.4</span></td>
+                    <td><span class='rsi-low'>34.8</span></td>
+                    <td>$4.5M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>42</td>
+                    <td class="symbol-name">ARUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-32.0</span></td>
+                    <td><span class='wt-negative'>-35.5</span></td>
+                    <td><span class='rsi-low'>42.0</span></td>
+                    <td>$1.6M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>43</td>
+                    <td class="symbol-name">ENSUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-28.1</span></td>
+                    <td><span class='wt-negative'>-33.0</span></td>
+                    <td><span class='rsi-low'>44.9</span></td>
+                    <td>$6.7M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>44</td>
+                    <td class="symbol-name">FLOWUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-5.8</span></td>
+                    <td><span class='wt-positive'>2.1</span></td>
+                    <td><span class='rsi-low'>45.5</span></td>
+                    <td>$1.3M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>45</td>
+                    <td class="symbol-name">IMXUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>2.2</span></td>
+                    <td><span class='wt-positive'>1.7</span></td>
+                    <td><span class='rsi-low'>48.1</span></td>
+                    <td>$1.8M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>46</td>
+                    <td class="symbol-name">APEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>49.5</span></td>
+                    <td><span class='wt-positive'>51.2</span></td>
+                    <td><span class='rsi-high'>58.3</span></td>
+                    <td>$23.0M</td>
+                    <td>RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>47</td>
+                    <td class="symbol-name">JASMYUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-8.1</span></td>
+                    <td><span class='wt-negative'>-8.3</span></td>
+                    <td><span class='rsi-low'>49.4</span></td>
+                    <td>$1.1M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>48</td>
+                    <td class="symbol-name">OPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-35.2</span></td>
+                    <td><span class='wt-negative'>-37.4</span></td>
+                    <td><span class='rsi-low'>45.1</span></td>
+                    <td>$16.0M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>49</td>
+                    <td class="symbol-name">INJUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>18.1</span></td>
+                    <td><span class='wt-positive'>13.2</span></td>
+                    <td><span class='rsi-low'>48.7</span></td>
+                    <td>$16.3M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>50</td>
+                    <td class="symbol-name">LDOUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-16.5</span></td>
+                    <td><span class='wt-negative'>-16.0</span></td>
+                    <td><span class='rsi-low'>43.7</span></td>
+                    <td>$17.3M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>51</td>
+                    <td class="symbol-name">ICPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>6.2</span></td>
+                    <td><span class='wt-positive'>10.8</span></td>
+                    <td><span class='rsi-low'>43.2</span></td>
+                    <td>$3.6M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>52</td>
+                    <td class="symbol-name">APTUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-7.5</span></td>
+                    <td><span class='wt-negative'>-7.6</span></td>
+                    <td><span class='rsi-low'>43.6</span></td>
+                    <td>$7.5M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>53</td>
+                    <td class="symbol-name">QNTUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>54.2</span></td>
+                    <td><span class='wt-positive'>59.0</span></td>
+                    <td><span class='rsi-high'>66.1</span></td>
+                    <td>$1.5M</td>
+                    <td>RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>54</td>
+                    <td class="symbol-name">FETUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-3.2</span></td>
+                    <td><span class='wt-negative'>-5.6</span></td>
+                    <td><span class='rsi-low'>41.8</span></td>
+                    <td>$13.8M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>55</td>
+                    <td class="symbol-name">CFXUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>23.2</span></td>
+                    <td><span class='wt-positive'>19.7</span></td>
+                    <td><span class='rsi-high'>55.1</span></td>
+                    <td>$684K</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>56</td>
+                    <td class="symbol-name">STXUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>25.6</span></td>
+                    <td><span class='wt-positive'>25.6</span></td>
+                    <td><span class='rsi-high'>50.6</span></td>
+                    <td>$3.4M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>57</td>
+                    <td class="symbol-name">ARBUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-5.0</span></td>
+                    <td><span class='wt-negative'>-5.1</span></td>
+                    <td><span class='rsi-low'>46.1</span></td>
+                    <td>$11.7M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>58</td>
+                    <td class="symbol-name">SUIUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>16.2</span></td>
+                    <td><span class='wt-positive'>18.6</span></td>
+                    <td><span class='rsi-low'>47.8</span></td>
+                    <td>$72.9M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>59</td>
+                    <td class="symbol-name">WLDUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-18.9</span></td>
+                    <td><span class='wt-negative'>-19.5</span></td>
+                    <td><span class='rsi-low'>38.9</span></td>
+                    <td>$17.6M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>60</td>
+                    <td class="symbol-name">PENDLEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-50.3</span></td>
+                    <td><span class='wt-negative'>-48.7</span></td>
+                    <td><span class='rsi-low'>43.0</span></td>
+                    <td>$4.6M</td>
+                    <td>RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>61</td>
+                    <td class="symbol-name">SEIUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>1.1</span></td>
+                    <td><span class='wt-positive'>2.5</span></td>
+                    <td><span class='rsi-low'>50.0</span></td>
+                    <td>$2.8M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>62</td>
+                    <td class="symbol-name">BSVUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>8.7</span></td>
+                    <td><span class='wt-positive'>6.3</span></td>
+                    <td><span class='rsi-high'>53.3</span></td>
+                    <td>$420K</td>
+                    <td>WT neutral, RSI binh thuong, Volume thap</td>
+                </tr>
+
+                <tr>
+                    <td>63</td>
+                    <td class="symbol-name">TIAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>6.6</span></td>
+                    <td><span class='wt-positive'>4.6</span></td>
+                    <td><span class='rsi-high'>55.5</span></td>
+                    <td>$12.7M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>64</td>
+                    <td class="symbol-name">CAKEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-26.1</span></td>
+                    <td><span class='wt-negative'>-31.1</span></td>
+                    <td><span class='rsi-low'>46.9</span></td>
+                    <td>$4.2M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>65</td>
+                    <td class="symbol-name">KASUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>22.2</span></td>
+                    <td><span class='wt-positive'>21.3</span></td>
+                    <td><span class='rsi-high'>58.4</span></td>
+                    <td>$2.7M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>66</td>
+                    <td class="symbol-name">PYTHUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>56.8</span></td>
+                    <td><span class='wt-positive'>48.2</span></td>
+                    <td><span class='rsi-high'>64.2</span></td>
+                    <td>$2.3M</td>
+                    <td>RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>67</td>
+                    <td class="symbol-name">JTOUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-0.5</span></td>
+                    <td><span class='wt-negative'>-8.1</span></td>
+                    <td><span class='rsi-high'>54.6</span></td>
+                    <td>$3.9M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>68</td>
+                    <td class="symbol-name">WIFUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-1.7</span></td>
+                    <td><span class='wt-positive'>8.9</span></td>
+                    <td><span class='rsi-low'>33.2</span></td>
+                    <td>$43.9M</td>
+                    <td>WT neutral, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>69</td>
+                    <td class="symbol-name">ONDOUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-4.2</span></td>
+                    <td><span class='wt-negative'>-10.6</span></td>
+                    <td><span class='rsi-high'>51.9</span></td>
+                    <td>$9.9M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>70</td>
+                    <td class="symbol-name">JUPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-19.1</span></td>
+                    <td><span class='wt-negative'>-19.6</span></td>
+                    <td><span class='rsi-low'>44.4</span></td>
+                    <td>$7.7M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>71</td>
+                    <td class="symbol-name">STRKUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>25.4</span></td>
+                    <td><span class='wt-positive'>18.6</span></td>
+                    <td><span class='rsi-high'>57.1</span></td>
+                    <td>$1.6M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>72</td>
+                    <td class="symbol-name">TONUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>11.5</span></td>
+                    <td><span class='wt-positive'>17.0</span></td>
+                    <td><span class='rsi-high'>53.5</span></td>
+                    <td>$12.7M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>73</td>
+                    <td class="symbol-name">ENAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-30.3</span></td>
+                    <td><span class='wt-negative'>-28.6</span></td>
+                    <td><span class='rsi-low'>33.3</span></td>
+                    <td>$42.4M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>74</td>
+                    <td class="symbol-name">TAOUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>3.9</span></td>
+                    <td><span class='wt-positive'>4.3</span></td>
+                    <td><span class='rsi-low'>45.0</span></td>
+                    <td>$19.3M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>75</td>
+                    <td class="symbol-name">RENDERUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>66.1</span></td>
+                    <td><span class='wt-positive'>60.9</span></td>
+                    <td><span class='rsi-high'>65.7</span></td>
+                    <td>$4.5M</td>
+                    <td>RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>76</td>
+                    <td class="symbol-name">BRETTUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-18.0</span></td>
+                    <td><span class='wt-negative'>-16.7</span></td>
+                    <td><span class='rsi-low'>41.1</span></td>
+                    <td>$2.1M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>77</td>
+                    <td class="symbol-name">SUNUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-4.6</span></td>
+                    <td><span class='wt-negative'>-14.6</span></td>
+                    <td><span class='rsi-high'>62.6</span></td>
+                    <td>$393K</td>
+                    <td>WT neutral, RSI overbought, Volume thap</td>
+                </tr>
+
+                <tr>
+                    <td>78</td>
+                    <td class="symbol-name">POLUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>25.8</span></td>
+                    <td><span class='wt-positive'>19.2</span></td>
+                    <td><span class='rsi-high'>52.7</span></td>
+                    <td>$2.1M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>79</td>
+                    <td class="symbol-name">EIGENUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>74.2</span></td>
+                    <td><span class='wt-positive'>63.4</span></td>
+                    <td><span class='rsi-high'>76.6</span></td>
+                    <td>$12.9M</td>
+                    <td>RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>80</td>
+                    <td class="symbol-name">GRASSUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>31.4</span></td>
+                    <td><span class='wt-positive'>39.3</span></td>
+                    <td><span class='rsi-high'>59.5</span></td>
+                    <td>$11.8M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>81</td>
+                    <td class="symbol-name">KAIAUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-15.5</span></td>
+                    <td><span class='wt-negative'>-10.7</span></td>
+                    <td><span class='rsi-low'>36.4</span></td>
+                    <td>$489K</td>
+                    <td>WT chua extreme, RSI oversold, Volume thap</td>
+                </tr>
+
+                <tr>
+                    <td>82</td>
+                    <td class="symbol-name">AEROUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>39.4</span></td>
+                    <td><span class='wt-positive'>30.4</span></td>
+                    <td><span class='rsi-high'>63.0</span></td>
+                    <td>$531K</td>
+                    <td>WT chua extreme, RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>83</td>
+                    <td class="symbol-name">VIRTUALUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-32.7</span></td>
+                    <td><span class='wt-negative'>-38.9</span></td>
+                    <td><span class='rsi-low'>43.4</span></td>
+                    <td>$29.0M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>84</td>
+                    <td class="symbol-name">SPXUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>0.6</span></td>
+                    <td><span class='wt-negative'>-8.3</span></td>
+                    <td><span class='rsi-high'>50.5</span></td>
+                    <td>$11.4M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>85</td>
+                    <td class="symbol-name">PENGUUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>20.6</span></td>
+                    <td><span class='wt-positive'>3.4</span></td>
+                    <td><span class='rsi-high'>60.6</span></td>
+                    <td>$6.9M</td>
+                    <td>WT chua extreme, RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>86</td>
+                    <td class="symbol-name">FARTCOINUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>11.7</span></td>
+                    <td><span class='wt-negative'>-1.2</span></td>
+                    <td><span class='rsi-high'>70.0</span></td>
+                    <td>$91.9M</td>
+                    <td>WT neutral, RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>87</td>
+                    <td class="symbol-name">DEXEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-15.1</span></td>
+                    <td><span class='wt-negative'>-6.9</span></td>
+                    <td><span class='rsi-low'>43.7</span></td>
+                    <td>$2.7M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>88</td>
+                    <td class="symbol-name">SUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-positive'>19.0</span></td>
+                    <td><span class='wt-positive'>6.7</span></td>
+                    <td><span class='rsi-high'>52.9</span></td>
+                    <td>$3.6M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>89</td>
+                    <td class="symbol-name">TRUMPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-35.2</span></td>
+                    <td><span class='wt-negative'>-32.5</span></td>
+                    <td><span class='rsi-low'>38.6</span></td>
+                    <td>$60.6M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>90</td>
+                    <td class="symbol-name">IPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-25.0</span></td>
+                    <td><span class='wt-negative'>-28.9</span></td>
+                    <td><span class='rsi-low'>46.9</span></td>
+                    <td>$790K</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>91</td>
+                    <td class="symbol-name">KAITOUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-46.4</span></td>
+                    <td><span class='wt-negative'>-46.6</span></td>
+                    <td><span class='rsi-low'>44.5</span></td>
+                    <td>$17.6M</td>
+                    <td>RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>92</td>
+                    <td class="symbol-name">PAXGUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-negative'>-48.1</span></td>
+                    <td><span class='wt-negative'>-56.5</span></td>
+                    <td><span class='rsi-low'>44.5</span></td>
+                    <td>$7.1M</td>
+                    <td>RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>93</td>
+                    <td class="symbol-name">WALUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-5.2</span></td>
+                    <td><span class='wt-negative'>-7.7</span></td>
+                    <td><span class='rsi-low'>47.6</span></td>
+                    <td>$1.2M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>94</td>
+                    <td class="symbol-name">ATHUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span class='wt-positive'>9.3</span></td>
+                    <td><span class='wt-positive'>6.4</span></td>
+                    <td><span class='rsi-low'>49.6</span></td>
+                    <td>$1.5M</td>
+                    <td>WT neutral, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>95</td>
+                    <td class="symbol-name">XCNUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span class='wt-negative'>-34.8</span></td>
+                    <td><span class='wt-negative'>-34.8</span></td>
+                    <td><span class='rsi-low'>37.0</span></td>
+                    <td>$600K</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>96</td>
+                    <td class="symbol-name">SYRUPUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #888;">→</span></td>
+                    <td><span class='wt-positive'>15.7</span></td>
+                    <td><span class='wt-positive'>12.8</span></td>
+                    <td><span class='rsi-high'>50.9</span></td>
+                    <td>$12.0M</td>
+                    <td>WT chua extreme, RSI binh thuong</td>
+                </tr>
+
+                <tr>
+                    <td>97</td>
+                    <td class="symbol-name">ZKJUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #4CAF50;">↗️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #888;">→</span></td>
+                    <td><span class='wt-positive'>21.8</span></td>
+                    <td><span class='wt-positive'>16.9</span></td>
+                    <td><span class='rsi-low'>50.0</span></td>
+                    <td>$156K</td>
+                    <td>WT chua extreme, RSI binh thuong, Volume thap</td>
+                </tr>
+
+                <tr>
+                    <td>98</td>
+                    <td class="symbol-name">BUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #888;">→</span></td>
+                    <td><span class='wt-positive'>38.2</span></td>
+                    <td><span class='wt-positive'>37.9</span></td>
+                    <td><span class='rsi-high'>67.8</span></td>
+                    <td>$6.5M</td>
+                    <td>WT chua extreme, RSI overbought</td>
+                </tr>
+
+                <tr>
+                    <td>99</td>
+                    <td class="symbol-name">AUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #888;">→</span></td>
+                    <td><span class='wt-negative'>-30.4</span></td>
+                    <td><span class='wt-negative'>-34.8</span></td>
+                    <td><span class='rsi-low'>37.2</span></td>
+                    <td>$1.5M</td>
+                    <td>WT chua extreme, RSI oversold</td>
+                </tr>
+
+                <tr>
+                    <td>100</td>
+                    <td class="symbol-name">HYPEUSDT</td>
+                    <td></td>
+                    <td><span class="status-no-signal">○ No Signal</span></td>
+                    <td><span style="color: #f44336;">↘️</span></td>
+                    <td><span style="color: #888;">→</span></td>
+                    <td><span style="color: #888;">→</span></td>
+                    <td><span class='wt-negative'>-3.3</span></td>
+                    <td><span class='wt-negative'>-13.2</span></td>
+                    <td><span class='rsi-high'>65.3</span></td>
+                    <td>$26.0M</td>
+                    <td>WT neutral, RSI overbought</td>
+                </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="signals" class="tab-content">
+
+                <div class="no-signals">
+                    <h3>🔍 Chua co tin hieu nao</h3>
+                    <p>Bot dang quet va se hien thi tin hieu tai day khi phat hien</p>
+                    <p>Kiem tra lai sau 60 giay...</p>
+                </div>
+
+        </div>
+        
+        <div class="refresh-note">
+            <p><strong>🔄 Auto Refresh:</strong> Dashboard tu dong cap nhat moi 65 giay</p>
+            <p><strong>📱 Mobile Ready:</strong> Responsive design cho tat ca thiet bi</p>
+            <p><strong>🎯 Real-time Data:</strong> Ket noi truc tiep voi Binance API</p>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        // Auto refresh every 65 seconds
+        setTimeout(function() {{
+            location.reload();
+        }}, 65000);
+        
+        // Add loading indicator
+        document.addEventListener('DOMContentLoaded', function() {{
+            console.log('Dashboard loaded successfully');
+        }});
+    </script>
+</body>
+</html>
